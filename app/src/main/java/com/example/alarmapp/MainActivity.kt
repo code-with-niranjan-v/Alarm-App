@@ -5,14 +5,24 @@ import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.TimePicker
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.alarmapp.databinding.ActivityMainBinding
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat.CLOCK_12H
 import java.util.Calendar
 import kotlin.math.PI
+import android.Manifest;
+import android.app.Instrumentation.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -39,8 +49,25 @@ class MainActivity : AppCompatActivity() {
             alarmManager.cancelAlarm()
         }
 
+        val requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (isGranted) {
+                Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show()
+
+
+            } else {
+                Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        askNotificationPermission(requestPermissionLauncher)
+
+
+
 
     }
+
 
     @SuppressLint("SuspiciousIndentation")
     private fun showTimePicker(){
@@ -85,6 +112,20 @@ class MainActivity : AppCompatActivity() {
 
 
 
+
+    private fun askNotificationPermission(requestPermissionLauncher:ActivityResultLauncher<String>) {
+        // This is only necessary for API level >= 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(this, "Notification permission already granted", Toast.LENGTH_SHORT).show()
+            } else {
+
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
 
 
